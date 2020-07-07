@@ -1,7 +1,10 @@
 ## mako
 
 <%page expression_filter="h"/>
-<%! from django.utils.translation import ugettext as _ %>
+<%!
+from django.urls import reverse
+from django.utils.translation import ugettext as _
+%>
 <%inherit file="../main.html" />
 
 <%block name="pagetitle">
@@ -16,7 +19,7 @@
     % if staff is True:
     <div class="row">
         <div class="col-md-4">       
-            <a href="emails/">
+            <a href="${reverse('edxnewsletters-data:email')}">
                 <button style="text-shadow: none; border-color:white; background-color: #0075b4; background-image: none; display:block;" >Exportar Correos</button>
             </a>
         </div>
