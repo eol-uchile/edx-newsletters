@@ -13,7 +13,7 @@ import re
 import json
 import urllib.parse
 from .views import EdxNewslettersSuscribe, EdxNewslettersUnsuscribe, EdxNewslettersEmails
-from .models import EdxNewslettersSuscribed
+from .models import EdxNewslettersUnsuscribed
 # Create your tests here.
 
 
@@ -23,7 +23,7 @@ class TestEdxNewslettersSuscribe(TestCase):
         with patch('student.models.cc.User.save'):
             # staff user
             self.client = Client()
-            user = UserFactory(
+            self.user = UserFactory(
                 username='testuser',
                 password='12345',
                 email='staff@edx.org',
@@ -31,12 +31,11 @@ class TestEdxNewslettersSuscribe(TestCase):
             self.client.login(username='testuser', password='12345')
             # student user
             self.st_client = Client()
-            st_user = UserFactory(
+            self.st_user = UserFactory(
                 username='testuser2',
                 password='12345',
                 email='student@edx.org')
             self.st_client.login(username='testuser2', password='12345')
-            self.anm_client = Client()
 
     def test_get_suscribed(self):
         """
@@ -49,18 +48,9 @@ class TestEdxNewslettersSuscribe(TestCase):
 
     def test_get_suscribed_student(self):
         """
-            Test suscribe with anonymous user
+            Test suscribe with student user
         """
         response = self.st_client.get(reverse('edxnewsletters-data:suscribe'))
-        request = response.request
-        self.assertEquals(response.status_code, 302)
-        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
-
-    def test_get_suscribed_anonymous(self):
-        """
-            Test suscribe get with anonymous user
-        """
-        response = self.anm_client.get(reverse('edxnewsletters-data:suscribe'))
         request = response.request
         self.assertEquals(response.status_code, 302)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
@@ -70,57 +60,51 @@ class TestEdxNewslettersSuscribe(TestCase):
             Test suscribed normal process
         """
         post_data = {
-            'emails': 'test@test.cl'
+            'emails': self.user.email
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
         response = self.client.post(
             reverse('edxnewsletters-data:suscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            "id=\"email_suscribed\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
-        self.assertEqual(emails_scb.count(), 1)
-        self.assertEqual(emails_scb[0].email, 'test@test.cl')
-        self.assertEqual(emails_scb[0].suscribed, True)
+            "id=\"email_not_found\"" not in response._container[0].decode())
+        self.assertTrue(
+            "id=\"email_modify\"" in response._container[0].decode())
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
 
     def test_suscribed_staff_post_exists(self):
         """
             Test suscribed with exists email db
         """
         post_data = {
-            'emails': 'test3@test.cl'
+            'emails': self.st_user.email
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
-        EdxNewslettersSuscribed.objects.create(
-            email='test3@test.cl', suscribed=False)
+        EdxNewslettersUnsuscribed.objects.create(user_email=self.st_user)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 1)
         response = self.client.post(
             reverse('edxnewsletters-data:suscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            "id=\"email_suscribed\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
-        self.assertEqual(emails_scb.count(), 1)
-        self.assertEqual(emails_scb[0].email, 'test3@test.cl')
-        self.assertEqual(emails_scb[0].suscribed, True)
+            "id=\"email_not_found\"" not in response._container[0].decode())
+        self.assertTrue(
+            "id=\"email_modify\"" in response._container[0].decode())
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
 
     def test_suscribed_staff_post_multipe_emails(self):
         """
             Test suscribed with multiple email
         """
         post_data = {
-            'emails': 'test@test.cl\ntest2@test.cl\ntest3@test.cl\ntest4@test.cl'}
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
+            'emails': '{}\n{}'.format(self.st_user.email, self.user.email)}
+        EdxNewslettersUnsuscribed.objects.create(user_email=self.st_user)
+        EdxNewslettersUnsuscribed.objects.create(user_email=self.user)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 2)
         response = self.client.post(
             reverse('edxnewsletters-data:suscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            "id=\"email_suscribed\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
-        self.assertEqual(emails_scb.count(), 4)
-        self.assertEqual(emails_scb[0].email, 'test@test.cl')
-        self.assertEqual(emails_scb[0].suscribed, True)
-        self.assertEqual(emails_scb[3].email, 'test4@test.cl')
-        self.assertEqual(emails_scb[3].suscribed, True)
+            "id=\"email_modify\"" in response._container[0].decode())
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
 
     def test_suscribed_staff_post_no_email(self):
         """
@@ -129,12 +113,12 @@ class TestEdxNewslettersSuscribe(TestCase):
         post_data = {
             'emails': ''
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
         response = self.client.post(
             reverse('edxnewsletters-data:suscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue("id=\"no_email\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
+        emails_scb = EdxNewslettersUnsuscribed.objects.all()
         self.assertEqual(emails_scb.count(), 0)
 
     def test_suscribed_staff_post_wrong_email(self):
@@ -144,15 +128,30 @@ class TestEdxNewslettersSuscribe(TestCase):
         post_data = {
             'emails': 'adsdsad'
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
         response = self.client.post(
             reverse('edxnewsletters-data:suscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
             "id=\"email_malos\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
+        emails_scb = EdxNewslettersUnsuscribed.objects.all()
         self.assertEqual(emails_scb.count(), 0)
 
+    def test_post_student_suscribed(self):
+        """
+            Test suscribe post with student user
+        """
+        post_data = {
+            'emails': self.user.email
+        }
+        EdxNewslettersUnsuscribed.objects.create(user_email=self.user)
+        response = self.st_client.get(reverse('edxnewsletters-data:suscribe'))
+        request = response.request
+        self.assertEquals(response.status_code, 302)
+        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
+        emails_scb = EdxNewslettersUnsuscribed.objects.all()
+        self.assertEqual(emails_scb.count(), 1)
+        self.assertEqual(emails_scb[0].user_email, self.user)
 
 class TestEdxNewslettersUnsuscribe(TestCase):
 
@@ -160,7 +159,7 @@ class TestEdxNewslettersUnsuscribe(TestCase):
         with patch('student.models.cc.User.save'):
             # staff user
             self.client = Client()
-            user = UserFactory(
+            self.user = UserFactory(
                 username='testuser',
                 password='12345',
                 email='staff@edx.org',
@@ -168,12 +167,11 @@ class TestEdxNewslettersUnsuscribe(TestCase):
             self.client.login(username='testuser', password='12345')
             # student user
             self.st_client = Client()
-            st_user = UserFactory(
+            self.st_user = UserFactory(
                 username='testuser2',
                 password='12345',
                 email='student@edx.org')
             self.st_client.login(username='testuser2', password='12345')
-            self.anm_client = Client()
 
     def test_get_unsuscribed(self):
         """
@@ -191,75 +189,64 @@ class TestEdxNewslettersUnsuscribe(TestCase):
         response = self.st_client.get(
             reverse('edxnewsletters-data:unsuscribe'))
         request = response.request
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, 200)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsuscribe/')
 
-    def test_get_unsuscribed_anonymous(self):
+    def test_unsuscribed_student_post(self):
         """
-            Test unsuscribe with anonymous user
-        """
-        response = self.anm_client.get(
-            reverse('edxnewsletters-data:unsuscribe'))
-        request = response.request
-        self.assertEquals(response.status_code, 302)
-        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsuscribe/')
-
-    def test_unsuscribed_staff_post(self):
-        """
-            Test unsuscribed normal process
+            Test unsuscribed student post with email not found
         """
         post_data = {
-            'emails': 'test@test.cl'
+            'emails': 'four0four@edx.org'
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
-        response = self.client.post(
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
+        response = self.st_client.post(
             reverse('edxnewsletters-data:unsuscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            "id=\"email_suscribed\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
-        self.assertEqual(emails_scb.count(), 1)
-        self.assertEqual(emails_scb[0].email, 'test@test.cl')
-        self.assertEqual(emails_scb[0].suscribed, False)
+            "id=\"email_not_found\"" not in response._container[0].decode())
+        self.assertTrue(
+            "id=\"email_modify\"" not in response._container[0].decode())
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
 
     def test_unsuscribed_staff_post_exists(self):
         """
             Test unsuscribed with exists email db
         """
         post_data = {
-            'emails': 'test@test.cl'
+            'emails': self.st_user.email
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
-        EdxNewslettersSuscribed.objects.create(
-            email='test@test.cl', suscribed=True)
+        EdxNewslettersUnsuscribed.objects.create(user_email=self.st_user)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 1)
         response = self.client.post(
             reverse('edxnewsletters-data:unsuscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            "id=\"email_suscribed\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
+            "id=\"email_not_found\"" not in response._container[0].decode())
+        self.assertTrue(
+            "id=\"email_modify\"" in response._container[0].decode())
+        emails_scb = EdxNewslettersUnsuscribed.objects.all()
         self.assertEqual(emails_scb.count(), 1)
-        self.assertEqual(emails_scb[0].email, 'test@test.cl')
-        self.assertEqual(emails_scb[0].suscribed, False)
+        self.assertEqual(emails_scb[0].user_email, self.st_user)
 
     def test_unsuscribed_staff_post_multipe_emails(self):
         """
             Test unsuscribed with multiple email
         """
         post_data = {
-            'emails': 'test@test.cl\ntest2@test.cl\ntest3@test.cl\ntest4@test.cl'}
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
+            'emails': '{}\n{}'.format(self.st_user.email, self.user.email)}
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
         response = self.client.post(
             reverse('edxnewsletters-data:unsuscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            "id=\"email_suscribed\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
-        self.assertEqual(emails_scb.count(), 4)
-        self.assertEqual(emails_scb[0].email, 'test@test.cl')
-        self.assertEqual(emails_scb[0].suscribed, False)
-        self.assertEqual(emails_scb[3].email, 'test4@test.cl')
-        self.assertEqual(emails_scb[3].suscribed, False)
+            "id=\"email_not_found\"" not in response._container[0].decode())
+        self.assertTrue(
+            "id=\"email_modify\"" in response._container[0].decode())
+        emails_scb = EdxNewslettersUnsuscribed.objects.all()
+        self.assertEqual(emails_scb.count(), 2)
+        self.assertEqual(emails_scb[0].user_email, self.st_user)
+        self.assertEqual(emails_scb[1].user_email, self.user)
 
     def test_unsuscribed_staff_post_no_email(self):
         """
@@ -268,12 +255,12 @@ class TestEdxNewslettersUnsuscribe(TestCase):
         post_data = {
             'emails': ''
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
         response = self.client.post(
             reverse('edxnewsletters-data:unsuscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue("id=\"no_email\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
+        emails_scb = EdxNewslettersUnsuscribed.objects.all()
         self.assertEqual(emails_scb.count(), 0)
 
     def test_unsuscribed_staff_post_wrong_email(self):
@@ -283,13 +270,13 @@ class TestEdxNewslettersUnsuscribe(TestCase):
         post_data = {
             'emails': 'adsdsad'
         }
-        self.assertEqual(EdxNewslettersSuscribed.objects.all().count(), 0)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 0)
         response = self.client.post(
             reverse('edxnewsletters-data:unsuscribe'), post_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
             "id=\"email_malos\"" in response._container[0].decode())
-        emails_scb = EdxNewslettersSuscribed.objects.all()
+        emails_scb = EdxNewslettersUnsuscribed.objects.all()
         self.assertEqual(emails_scb.count(), 0)
 
 
@@ -299,7 +286,7 @@ class TestEdxNewslettersEmails(TestCase):
         with patch('student.models.cc.User.save'):
             # staff user
             self.client = Client()
-            user = UserFactory(
+            self.user = UserFactory(
                 username='testuser',
                 password='12345',
                 email='staff@edx.org',
@@ -307,7 +294,7 @@ class TestEdxNewslettersEmails(TestCase):
             self.client.login(username='testuser', password='12345')
             # student user
             self.st_client = Client()
-            st_user = UserFactory(
+            self.st_user = UserFactory(
                 username='testuser2',
                 password='12345',
                 email='student@edx.org')
@@ -332,6 +319,8 @@ class TestEdxNewslettersEmails(TestCase):
         response = self.st_client.get(
             reverse('edxnewsletters-data:email'))
         request = response.request
+        data = response.content.decode()
+        self.assertEqual(data, "")
         self.assertEquals(response.status_code, 302)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/emails/')
 
@@ -342,6 +331,8 @@ class TestEdxNewslettersEmails(TestCase):
         response = self.anm_client.get(
             reverse('edxnewsletters-data:email'))
         request = response.request
+        data = response.content.decode()
+        self.assertEqual(data, "")
         self.assertEquals(response.status_code, 302)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/emails/')
 
@@ -349,9 +340,8 @@ class TestEdxNewslettersEmails(TestCase):
         """
             Test export email without unsuscribed email
         """
-        EdxNewslettersSuscribed.objects.create(
-            email='student@edx.org', suscribed=False)
-        self.assertEquals(EdxNewslettersSuscribed.objects.all().count(), 1)
+        EdxNewslettersUnsuscribed.objects.create(user_email=self.st_user)
+        self.assertEquals(EdxNewslettersUnsuscribed.objects.all().count(), 1)
         response = self.client.get(
             reverse('edxnewsletters-data:email'))
         data = response.content.decode().split("\r\n")

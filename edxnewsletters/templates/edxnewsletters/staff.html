@@ -6,13 +6,14 @@
 
 <%block name="pagetitle">
     % if suscribed is True:
-        ${"Suscribir Correos"}
+        ${"Suscribir Correo"}
     % else:
-        ${"Desuscribir Correos"}
+        ${"Desuscribir Correo"}
     % endif
 </%block>
 
 <main id="main" aria-label="Content" tabindex="-1" class="static_pages">
+    % if staff is True:
     <div class="row">
         <div class="col-md-4">       
             <a href="emails/">
@@ -20,31 +21,48 @@
             </a>
         </div>
     </div>
+    % endif
 % if suscribed is True:
-<h1>Suscribir Correos</h1>
+<% aux = "Suscribir" %>
 % else:
-<h1>Desuscribir Correos</h1>
+<% aux = "Desuscribir" %>
 % endif
+<h1>${aux} Correo</h1>
     <div style="text-align: center">
         <form method="POST">
            <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}"/>
            % if context.get('saved', UNDEFINED) == 'saved':
-                <b><p style="color:rgb(56, 181, 197); margin-bottom: 15px;">
-                    Correos 
-                    % if suscribed is True:
-                        Suscritos 
-                    % else:
-                        Desuscritos 
-                    % endif
-                Correctamente.</p></b>
-                % if context.get('email_suscribed', UNDEFINED) is not UNDEFINED:
-                    % if email_suscribed != "":
+                % if context.get('email_modify', UNDEFINED) is not UNDEFINED:
+                    % if email_modify != "":
+                        <b><p style="color:rgb(56, 181, 197); margin-bottom: 15px;">
+                            Correos 
+                            % if suscribed is True:
+                                Suscritos 
+                            % else:
+                                Desuscritos 
+                            % endif
+                        Correctamente.</p></b>
                         <p style="color:rgb(56, 181, 197); margin-bottom: 15px;">
                             <% 
-                                email_suscribed_aux = email_suscribed.split('-')
+                                email_modify_aux = email_modify.split('-')
                             %>
-                            <span id="email_suscribed">
-                                %for mail in email_suscribed_aux:
+                            <span id="email_modify">
+                                %for mail in email_modify_aux:
+                                    ${mail}</br>
+                                %endfor
+                            </span>
+                        </p>
+                    % endif
+                % endif
+                % if context.get('email_not_found', UNDEFINED) is not UNDEFINED:
+                    % if email_not_found != "" and staff is True:
+                        <b><p style="color:firebrick; margin-bottom: 15px;"> Correos no encontrados.</p></b>
+                        <p style="color:firebrick; margin-bottom: 15px;">
+                            <% 
+                                email_not_found_aux = email_not_found.split('-')
+                            %>
+                            <span id="email_not_found">
+                                %for mail in email_not_found_aux:
                                     ${mail}</br>
                                 %endfor
                             </span>
@@ -59,15 +77,15 @@
                 <p id="no_email" style="color:firebrick; margin-bottom: 15px;">Falta agregar email.</p>
             % endif
             <div class="form-group" style="margin: 15px 15px;">
-                <label for="emails" style="line-height: 33px; text-align: right; clear: both; margin-right: 15px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif">Email(s):</label>
-
-                % if context.get('emails', UNDEFINED) is not UNDEFINED:
-                    <textarea style="min-width: 400px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif" type="text" name='emails' id="emails" placeholder="asd@cd.ef&#10;asd@cd.ef">${emails}</textarea>                    
+                % if staff is True:
+                    <label for="emails" style="line-height: 33px; text-align: right; clear: both; margin-right: 15px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif">Correo(s):</label>
+                    <textarea style="min-width: 400px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif" type="text" name='emails' id="emails" placeholder="correo@mail.com&#10;correo@mail.com">${emails}</textarea>                    
                 % else:
-                    <textarea style="min-width: 400px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif" type="text" name='emails' id="emails" placeholder="asd@cd.ef&#10;asd@cd.ef"></textarea>
+                    <label for="emails" style="line-height: 33px; text-align: right; clear: both; margin-right: 15px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif">Confirmar Correo:</label>
+                    <input style="min-width: 400px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-right: 13px;" type="text" name='emails' id="emails"  placeholder="correo@mail.com" value="${emails}"></input>
                 % endif
             </div>
-            <input type="submit" style="text-shadow: none; border-color:white; background-color: #0075b4; background-image: none; display:block; margin: auto" value="Enviar">
+            <input type="submit" style="text-shadow: none; border-color:white; background-color: #0075b4; background-image: none; display:block; margin: auto" value="${aux}">
         </form>
     </div>
 </main>

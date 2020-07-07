@@ -11,6 +11,6 @@ urlpatterns = [url('^emails/$',
                    staff_member_required(EdxNewslettersSuscribe.as_view()),
                    name='suscribe'),
                url('^unsuscribe/$',
-                   staff_member_required(EdxNewslettersUnsuscribe.as_view()),
+                   EdxNewslettersUnsuscribe.as_view(),
                    name='unsuscribe'),
                ]
