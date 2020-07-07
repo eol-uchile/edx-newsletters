@@ -43,7 +43,7 @@ class TestEdxNewslettersSuscribe(TestCase):
         """
         response = self.client.get(reverse('edxnewsletters-data:suscribe'))
         request = response.request
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
 
     def test_get_suscribed_student(self):
@@ -52,7 +52,7 @@ class TestEdxNewslettersSuscribe(TestCase):
         """
         response = self.st_client.get(reverse('edxnewsletters-data:suscribe'))
         request = response.request
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
 
     def test_suscribed_staff_post(self):
@@ -147,7 +147,7 @@ class TestEdxNewslettersSuscribe(TestCase):
         EdxNewslettersUnsuscribed.objects.create(user_email=self.user)
         response = self.st_client.get(reverse('edxnewsletters-data:suscribe'))
         request = response.request
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
         emails_scb = EdxNewslettersUnsuscribed.objects.all()
         self.assertEqual(emails_scb.count(), 1)
@@ -179,7 +179,7 @@ class TestEdxNewslettersUnsuscribe(TestCase):
         """
         response = self.client.get(reverse('edxnewsletters-data:unsuscribe'))
         request = response.request
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsuscribe/')
 
     def test_get_unsuscribed_student(self):
@@ -189,7 +189,7 @@ class TestEdxNewslettersUnsuscribe(TestCase):
         response = self.st_client.get(
             reverse('edxnewsletters-data:unsuscribe'))
         request = response.request
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsuscribe/')
 
     def test_unsuscribed_student_post(self):
@@ -321,7 +321,7 @@ class TestEdxNewslettersEmails(TestCase):
         request = response.request
         data = response.content.decode()
         self.assertEqual(data, "")
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/emails/')
 
     def test_anonymous_export(self):
@@ -333,7 +333,7 @@ class TestEdxNewslettersEmails(TestCase):
         request = response.request
         data = response.content.decode()
         self.assertEqual(data, "")
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(request['PATH_INFO'], '/edxnewsletters/emails/')
 
     def test_staff_export_unsuscribed_email(self):
@@ -341,7 +341,7 @@ class TestEdxNewslettersEmails(TestCase):
             Test export email without unsuscribed email
         """
         EdxNewslettersUnsuscribed.objects.create(user_email=self.st_user)
-        self.assertEquals(EdxNewslettersUnsuscribed.objects.all().count(), 1)
+        self.assertEqual(EdxNewslettersUnsuscribed.objects.all().count(), 1)
         response = self.client.get(
             reverse('edxnewsletters-data:email'))
         data = response.content.decode().split("\r\n")

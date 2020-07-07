@@ -68,7 +68,7 @@ class EdxNewslettersSuscribe(Content, View):
         lista_email = [email.lower() for email in lista_email]
         lista_email = [email.strip() for email in lista_email]
         lista_email = [email for email in lista_email if email]
-        
+
         context = {
             'emails': request.POST.get('emails'), 'suscribed': True, 'staff': True
         }
