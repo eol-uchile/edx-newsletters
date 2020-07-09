@@ -47,7 +47,7 @@ from django.utils.translation import ugettext as _
                         Correctamente.</p></b>
                         <p style="color:rgb(56, 181, 197); margin-bottom: 15px;">
                             <% 
-                                email_modify_aux = email_modify.split('-')
+                                email_modify_aux = email_modify.split('/')
                             %>
                             <span id="email_modify">
                                 %for mail in email_modify_aux:
@@ -62,7 +62,7 @@ from django.utils.translation import ugettext as _
                         <b><p style="color:firebrick; margin-bottom: 15px;"> Correos no encontrados.</p></b>
                         <p style="color:firebrick; margin-bottom: 15px;">
                             <% 
-                                email_not_found_aux = email_not_found.split('-')
+                                email_not_found_aux = email_not_found.split('/')
                             %>
                             <span id="email_not_found">
                                 %for mail in email_not_found_aux:
@@ -88,6 +88,11 @@ from django.utils.translation import ugettext as _
                     <input style="min-width: 400px; font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-right: 13px;" type="text" name='emails' id="emails"  placeholder="correo@mail.com" value="${emails}"></input>
                 % endif
             </div>
+            % if staff is True:
+            <div class="form-group" style="margin: 15px 15px;">
+                <b><span for="emails" style="font-style: normal; font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif">Maximo 50 correos</span></b>
+            </div>
+            % endif
             <input type="submit" style="text-shadow: none; border-color:white; background-color: #0075b4; background-image: none; display:block; margin: auto" value="${aux}">
         </form>
     </div>

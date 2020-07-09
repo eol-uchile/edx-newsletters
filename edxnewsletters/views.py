@@ -36,9 +36,9 @@ class Content(object):
         for email in lista_email:
             try:
                 if not re.match(regex, email):
-                    email_malos += email + " - "
+                    email_malos += email + " / "
             except Exception:
-                email_malos += email + " - "
+                email_malos += email + " / "
 
         email_malos = email_malos[:-3]
 
@@ -68,7 +68,7 @@ class EdxNewslettersSuscribe(Content, View):
         lista_email = [email.lower() for email in lista_email]
         lista_email = [email.strip() for email in lista_email]
         lista_email = [email for email in lista_email if email]
-
+        lista_email = lista_email[:50]
         context = {
             'emails': request.POST.get('emails'), 'suscribed': True, 'staff': True
         }
@@ -92,13 +92,13 @@ class EdxNewslettersSuscribe(Content, View):
                 try:
                     edx_email = EdxNewslettersUnsuscribed.objects.get(user_email__email=email)
                     edx_email.delete()
-                    email_suscribed += email + " - "
+                    email_suscribed += email + " / "
                 except EdxNewslettersUnsuscribed.DoesNotExist:
                     try:
                         user = User.objects.get(email=email)
-                        email_suscribed += email + " - "
+                        email_suscribed += email + " / "
                     except User.DoesNotExist:
-                        email_not_found += email + " - "
+                        email_not_found += email + " / "
         email_suscribed = email_suscribed[:-3]
         email_not_found = email_not_found[:-3]
         return {
@@ -126,6 +126,7 @@ class EdxNewslettersUnsuscribe(Content, View):
             lista_email = [email.lower() for email in lista_email]
             lista_email = [email.strip() for email in lista_email]
             lista_email = [email for email in lista_email if email]
+            lista_email = lista_email[:50]
         else:
             lista_email = [request.POST.get("emails", "").lower().strip()]
         context = {
@@ -150,14 +151,14 @@ class EdxNewslettersUnsuscribe(Content, View):
             for email in lista_email:
                 try:
                     edx_email = EdxNewslettersUnsuscribed.objects.get(user_email__email=email)                    
-                    email_unsuscribed += email + " - "
+                    email_unsuscribed += email + " / "
                 except EdxNewslettersUnsuscribed.DoesNotExist:
                     try:
                         user = User.objects.get(email=email)
                         EdxNewslettersUnsuscribed.objects.create(user_email=user)
-                        email_unsuscribed += email + " - "
+                        email_unsuscribed += email + " / "
                     except User.DoesNotExist:
-                        email_not_found += email + " - "
+                        email_not_found += email + " / "
 
         email_unsuscribed = email_unsuscribed[:-3]
         email_not_found = email_not_found[:-3]
