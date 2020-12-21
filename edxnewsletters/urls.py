@@ -7,10 +7,10 @@ from .views import *
 urlpatterns = [url('^emails/$',
                    staff_member_required(EdxNewslettersEmails.as_view()),
                    name='email'),
-               url('^suscribe/$',
+               url('^subscribe/$',
                    staff_member_required(EdxNewslettersSuscribe.as_view()),
                    name='suscribe'),
-               url('^unsuscribe/$',
+               url('^unsubscribe/$',
                    EdxNewslettersUnsuscribe.as_view(),
                    name='unsuscribe'),
                ]

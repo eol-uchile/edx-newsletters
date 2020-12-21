@@ -44,7 +44,7 @@ class TestEdxNewslettersSuscribe(TestCase):
         response = self.client.get(reverse('edxnewsletters-data:suscribe'))
         request = response.request
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
+        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/subscribe/')
 
     def test_get_suscribed_student(self):
         """
@@ -53,7 +53,7 @@ class TestEdxNewslettersSuscribe(TestCase):
         response = self.st_client.get(reverse('edxnewsletters-data:suscribe'))
         request = response.request
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
+        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/subscribe/')
 
     def test_suscribed_staff_post(self):
         """
@@ -148,7 +148,7 @@ class TestEdxNewslettersSuscribe(TestCase):
         response = self.st_client.get(reverse('edxnewsletters-data:suscribe'))
         request = response.request
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/suscribe/')
+        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/subscribe/')
         emails_scb = EdxNewslettersUnsuscribed.objects.all()
         self.assertEqual(emails_scb.count(), 1)
         self.assertEqual(emails_scb[0].user_email, self.user)
@@ -180,7 +180,7 @@ class TestEdxNewslettersUnsuscribe(TestCase):
         response = self.client.get(reverse('edxnewsletters-data:unsuscribe'))
         request = response.request
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsuscribe/')
+        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsubscribe/')
 
     def test_get_unsuscribed_student(self):
         """
@@ -190,7 +190,7 @@ class TestEdxNewslettersUnsuscribe(TestCase):
             reverse('edxnewsletters-data:unsuscribe'))
         request = response.request
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsuscribe/')
+        self.assertEqual(request['PATH_INFO'], '/edxnewsletters/unsubscribe/')
 
     def test_unsuscribed_student_post(self):
         """
