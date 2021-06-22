@@ -7,7 +7,7 @@ from django.test import TestCase, Client
 from django.conf import settings
 from django.contrib.auth.models import User
 from urllib.parse import parse_qs
-from student.tests.factories import UserFactory
+from common.djangoapps.student.tests.factories import UserFactory
 from xmodule.modulestore import ModuleStoreEnum
 import re
 import json
@@ -20,7 +20,7 @@ from .models import EdxNewslettersUnsuscribed
 class TestEdxNewslettersSuscribe(TestCase):
 
     def setUp(self):
-        with patch('student.models.cc.User.save'):
+        with patch('common.djangoapps.student.models.cc.User.save'):
             # staff user
             self.client = Client()
             self.user = UserFactory(
@@ -156,7 +156,7 @@ class TestEdxNewslettersSuscribe(TestCase):
 class TestEdxNewslettersUnsuscribe(TestCase):
 
     def setUp(self):
-        with patch('student.models.cc.User.save'):
+        with patch('common.djangoapps.student.models.cc.User.save'):
             # staff user
             self.client = Client()
             self.user = UserFactory(
@@ -283,7 +283,7 @@ class TestEdxNewslettersUnsuscribe(TestCase):
 class TestEdxNewslettersEmails(TestCase):
 
     def setUp(self):
-        with patch('student.models.cc.User.save'):
+        with patch('common.djangoapps.student.models.cc.User.save'):
             # staff user
             self.client = Client()
             self.user = UserFactory(
