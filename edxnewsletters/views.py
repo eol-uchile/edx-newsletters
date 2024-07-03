@@ -177,7 +177,7 @@ class EdxNewslettersEmails(View):
 
     def get(self, request):
         data = [[]]
-        users = User.objects.all().exclude(id__in=EdxNewslettersUnsuscribed.objects.all().values('user_email')).order_by(
+        users = User.objects.filter(is_active=True).exclude(id__in=EdxNewslettersUnsuscribed.objects.all().values('user_email')).order_by(
             'email').values('email')
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="emails.csv"'
